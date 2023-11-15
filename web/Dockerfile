@@ -5,7 +5,7 @@ WORKDIR /app
 # install nginx
 RUN apt update && apt-get install -y nginx
 
-RUN pip install flask pymysql uwsgi
+RUN pip install flask pymysql uwsgi cryptography
 
 ARG DB_HOST
 ARG DB_PORT

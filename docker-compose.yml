@@ -5,7 +5,7 @@ services:
       context: ./web
       dockerfile: Dockerfile
       args:
-        - DB_HOST=host.docker.internal
+        - DB_HOST=mysql
         - DB_PORT=3306
         - DB_USER=root
         - DB_PASSWORD=root
@@ -17,3 +17,18 @@ services:
       - ./web/nginx/conf.d:/etc/nginx/conf.d/
       - ./web:/app
     command: /app/startup.sh
+  mysql:
+    image: mysql:latest
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: interview_schedule
+      MYSQL_PASSWORD: root
+      TZ: "Asia/Tokyo"
+    volumes:
+      - mysql-volume:/var/lib/mysql
+      - ./mysql/my.cnf:/etc/mysql/conf.d/my.cnf
+      - ./mysql/migrations:/docker-entrypoint-initdb.d
+    ports:
+      - 3306:3306
+volumes:
+  mysql-volume:
