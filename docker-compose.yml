@@ -1,0 +1,19 @@
+version: "3"
+services:
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+      args:
+        - DB_HOST=host.docker.internal
+        - DB_PORT=3306
+        - DB_USER=root
+        - DB_PASSWORD=root
+        - DB_NAME=interview_schedule
+        - APP_SECRET_KEY=app_secret_key
+    ports:
+      - 8080:8080
+    volumes:
+      - ./web/nginx/conf.d:/etc/nginx/conf.d/
+      - ./web:/app
+    command: /app/startup.sh

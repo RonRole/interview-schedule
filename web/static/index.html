@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <h1>面接予定確認アプリ(仮)</h1>
+    <section id="form-section">
+      <form action="#" id="create-plan-form">
+        <label for="start-at">開始日時</label>
+        <input type="datetime-local" name="start-at" id="start-at" />
+        <label for="company-name">会社名</label>
+        <input type="text" name="company-name" id="company-name" />
+        <label for="style-id">方法</label>
+        <select name="style-id" id="style-id"></select>
+        <label for="place">場所</label>
+        <input type="text" name="place" id="place" />
+        <label for="type-ids">内容</label>
+        <select name="type-ids" id="type-ids"></select>
+        <button type="submit">登録</button>
+      </form>
+    </section>
+    <section id="table-section">
+      <table>
+        <thead>
+          <tr>
+            <th>開始日時</th>
+            <th>会社名</th>
+            <th>方法</th>
+            <th>場所</th>
+            <th>内容</th>
+          </tr>
+        </thead>
+        <tbody id="table-body"></tbody>
+      </table>
+    </section>
+  </body>
+  <script src="static/index.js"></script>
+</html>

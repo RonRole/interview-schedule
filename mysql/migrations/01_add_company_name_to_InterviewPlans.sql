@@ -1,0 +1,1 @@
+ALTER TABLE InterviewPlans ADD company_name TEXT AFTER start_at;
