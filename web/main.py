@@ -103,6 +103,10 @@ def create_interview_plan():
     interview_plan_functions.create_interview_plan(**request.json)
     return {"status" : 200}
 
+@app.route("/interview/plans/<int:id>", methods=["DELETE"])
+def delete_interview_plan(id):
+    interview_plan_functions.delete_interview_plan(id)
+    return {"status" : 200}
 
 if __name__ == '__main__':
     app.run()

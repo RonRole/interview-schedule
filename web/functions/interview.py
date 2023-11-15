@@ -69,3 +69,6 @@ class InterviewPlanFunctions:
             ),
             *[('INSERT INTO InterviewPlansAndTypes (plan_id, type_id) SELECT LAST_INSERT_ID(), %s', s) for s in type_ids]
         )
+
+    def delete_interview_plan(self, plan_id):
+        self.__db.execute('DELETE FROM InterviewPlans WHERE id = %s', plan_id)

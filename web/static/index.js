@@ -70,37 +70,32 @@ class TableBody {
       })
       .forEach((td) => tr.appendChild(td));
     this.#dom.appendChild(tr);
+    tr.id = crypto.randomUUID();
+    return tr.id;
+  }
+
+  deleteRow(rowId) {
+    const row = document.getElementById(rowId);
+    this.#dom.removeChild(row);
   }
 }
 
 const tableBody = new TableBody("table-body");
 
-class Repository {
+class RestRepository {
   #apiUrl;
-  #src;
-  constructor(apiUrl, src = {}) {
+
+  constructor(apiUrl) {
     this.#apiUrl = apiUrl;
-    this.#src = src;
   }
 
-  async load() {
+  async list() {
     const res = await fetch(this.#apiUrl);
     const json = await res.json();
-    if (!json["data"]) return;
-    const newSrc = json["data"].reduce((pre, cur) => {
-      pre[cur.id] = cur;
-      return pre;
-    }, {});
-    return new Repository(structuredClone(this.#apiUrl), newSrc);
+    return json["data"];
   }
 
-  /**
-   * インスタンス生成時に渡したapiUrlに
-   * bodyをjsonとしてpostする
-   * @param {*} body
-   * @returns
-   */
-  async postJson(body) {
+  async create(body) {
     return fetch(this.#apiUrl, {
       method: "POST",
       headers: {
@@ -110,27 +105,31 @@ class Repository {
     });
   }
 
-  get items() {
-    return structuredClone(Object.values(this.#src));
+  async delete(id) {
+    return fetch(`${this.#apiUrl}/${id}`, {
+      method: "DELETE",
+    });
   }
 }
 
-const styleRepository = new Repository(`${location.origin}/interview/styles`);
+const styleRepository = new RestRepository(
+  `${location.origin}/interview/styles`
+);
 
-const typeRepository = new Repository(`${location.origin}/interview/types`);
+const typeRepository = new RestRepository(`${location.origin}/interview/types`);
 
-const plansRepository = new Repository(`${location.origin}/interview/plans`);
+const plansRepository = new RestRepository(
+  `${location.origin}/interview/plans`
+);
 
 class StartAtComponent {
   static DATE_FORMAT_OPTION = {
     year: "numeric",
     month: "long", // 'long' を使用すると日本式の月名になります
-    day: "numeric",
+    day: "2-digit",
     hour: "2-digit",
     minute: "2-digit",
-    second: "2-digit",
     hour12: false, // 24時間表示
-    timeZoneName: "short", // タイムゾーン名を表示
     timeZone: "UTC",
   };
   constructor(src) {
@@ -203,28 +202,59 @@ function createPlanComponent({ start_at, company_name, style, place, types }) {
   };
 }
 
+class DeleteButtonComponent {
+  toDom() {
+    return this.#createDom();
+  }
+
+  #createDom() {
+    const dom = document.createElement("button");
+    dom.type = "button";
+    dom.textContent = "削除";
+    return dom;
+  }
+}
+
+async function onClickDeleteButton(rowId, planId) {
+  const res = await plansRepository.delete(planId);
+  if (!res || res["status"] !== 200) {
+    alert("エラーやで");
+  } else {
+    alert("削除したやで");
+    tableBody.deleteRow(rowId);
+  }
+}
+
 async function loadStyleSelectBox() {
-  const repository = await styleRepository.load();
-  repository.items.forEach(({ id, name }) =>
+  const items = await styleRepository.list();
+  items.forEach(({ id, name }) =>
     styleSelectBox.addOption({ value: id, text: name })
   );
 }
 async function loadTypeSelectBox() {
-  const repository = await typeRepository.load();
-  repository.items.forEach(({ id, name }) => {
+  const items = await typeRepository.list();
+  items.forEach(({ id, name }) => {
     typeSelectBox.addOption({ value: id, text: name });
   });
 }
 async function loadPlanTable() {
-  const repository = await plansRepository.load();
-  repository.items
-    .map((plan) => createPlanComponent(plan))
+  const items = await plansRepository.list();
+  items
+    .map((plan) => {
+      return {
+        id: plan.id,
+        ...createPlanComponent(plan),
+        deleteButton: new DeleteButtonComponent(),
+      };
+    })
     .sort((a, b) => b.start_at.compare(a.start_at))
-    .forEach(({ start_at, company_name, style, place, types }) => {
-      const rowDoms = [start_at, company_name, style, place, types].map(
-        (component) => component.toDom()
+    .forEach(({ id, deleteButton, ...components }) => {
+      const deleteButtonDom = deleteButton.toDom();
+      const rowDoms = Object.values(components).map((component) =>
+        component.toDom()
       );
-      tableBody.addRow(rowDoms);
+      const rowId = tableBody.addRow([...rowDoms, deleteButtonDom]);
+      deleteButtonDom.onclick = async () => onClickDeleteButton(rowId, id);
     });
 }
 
@@ -244,7 +274,7 @@ createForm.onSubmit = async ({
   place,
   typeIds,
 }) => {
-  const res = await plansRepository.postJson({
+  const res = await plansRepository.create({
     start_at: startAt,
     style_id: styleId,
     company_name: companyName,
