@@ -27,6 +27,6 @@ class DataBase:
     def execute_multi(self, *sql_params_pairs):
         with self.__open_conn() as connection:
             with connection.cursor() as cursor:
-                for pair in sql_params_pairs:
-                    cursor.execute(pair[0], pair[1])
+                for query, params in sql_params_pairs:
+                    cursor.execute(query, params)
                 connection.commit()
